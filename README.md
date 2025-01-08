@@ -1,60 +1,12 @@
 # ct-iot-observability
 
 ## Description
+- monitoring namespace
 - ct-iot namespace
-- grafana
-- prometheus
+- kube-prometheus-stack
 
-## helm
-- 
-
-## kubectl
+## minikube
 ```
-kubectl create namespace ct-iot
-
-kubectl install grafana
-kubectl install prometheus
-```
-
-```
-kubectl --namespace=kube-system create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin --
-helm ls
-
-
-helm install -f prometheus-values.yml charts/stable/prometheus --name prometheus --namespace prometheus
-vi grafana-values.yml
-
-
-helm install -f grafana-values.yml charts/stable/grafana/ --name grafana --namespace grafana
-vi grafana-ext.yml
-
-
-
-# binami
-helm install my-release oci://registry-1.docker.io/bitnamicharts/prometheus
-helm install prometheus -n ct-iot oci://registry-1.docker.io/bitnamicharts/prometheus
-
-
-helm install my-release oci://registry-1.docker.io/bitnamicharts/grafana
-helm install grafana -n ct-iot oci://registry-1.docker.io/bitnamicharts/grafana
-
-```
-
-
-# start-over and revised
-```
-helm repo add bitnami https://charts.bitnami.com/bitnami
-$ helm search repo bitnami
-$ helm install my-release bitnami/<chart>
-```
-
-## Integrate Prometheus with Grafana
-https://github.com/bitnami/charts/tree/main/bitnami/prometheus
-https://github.com/bitnami/charts/tree/main/bitnami/grafana
-
-```
-
-# minikube
 minikube start
 minikube addons disable metrics-server
 ```
@@ -67,16 +19,36 @@ k create namespace monitoring
 
 ## helm
 ```
-helm install prometheus oci://registry-1.docker.io/bitnamicharts/prometheus -n monitoring
-    
-helm install grafana oci://registry-1.docker.io/bitnamicharts/grafana \
-    -f helm/grafana-values.yaml -n monitoring
+# promethues | grafana
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm install prometheus prometheus-community/kube-prometheus-stack -n monitoring
+
+## jsonnet-bundler
+brew install jsonnet-bundler
+jb init
+jb install github.com/prometheus-operator/kube-prometheus/jsonnet/kube-prometheus@main
+
+## wget
+brew install wget
+
+## kube-prometheus config
+wget https://raw.githubusercontent.com/prometheus-operator/kube-prometheus/main/example.jsonnet -O example.jsonnet
+wget https://raw.githubusercontent.com/prometheus-operator/kube-prometheus/main/build.sh -O build.sh
+chmod +x build.sh
+
+# grafana password
+k get secret prometheus-grafana -n monitoring -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
 
 # port forwarding
 echo "Browse to http://127.0.0.1:8080"
-    k -n monitoring port-forward svc/grafana 8080:3000 &
-
+    k -n monitoring port-forward svc/prometheus-grafana 8080:80 &
+    
 # list all port forwards across all services
 k get svc -o json | jq '.items[] | {name:.metadata.name, p:.spec.ports[] } | select( .p.nodePort != null ) | "\(.name): localhost:\(.p.nodePort) -> \(.p.port) -> \(.p.targetPort)"'
+
+
+# kafka | postgresql
+helm repo add bitnami https://charts.bitnami.com/bitnami
+...
 
 ```

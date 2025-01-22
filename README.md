@@ -52,3 +52,13 @@ helm repo add bitnami https://charts.bitnami.com/bitnami
 ...
 
 ```
+
+```
+helm upgrade --install prometheus prometheus-community/kube-prometheus-stack -n monitoring -f helm/prometheus-additional.yaml
+
+helm install prometheus prometheus-community/kube-prometheus-stack -n monitoring -f helm/prometheus-additional.yaml
+
+sum(rate(http_request_duration_ms_count[2m])) by (method, handler, http_status) * 60
+
+sum(rate(http_request_duration_ms_count[2m])) by (service, route, method, code) * 60
+```

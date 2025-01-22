@@ -1,7 +1,0 @@
-alertmanager:
-  persistence:
-    enabled: false
-
-server:
-  persistence:
-    enabled: false

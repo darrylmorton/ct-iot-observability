@@ -1,0 +1,17 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: ct-iot-servicemonitor
+  labels:
+    app: ct-iot
+spec:
+  jobLabel: ct-iot-servicemonitor
+  selector:
+    matchExpressions:
+      - {key: app, operator: Exists}
+  namespaceSelector:
+    matchNames:
+      - ct-iot
+  endpoints:
+    - port: http-metrics
+      interval: 15s

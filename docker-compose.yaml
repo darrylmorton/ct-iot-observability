@@ -5,8 +5,8 @@ services:
     hostname: zookeeper-1
     container_name: zookeeper-1
     volumes:
-      - ./zookeeper-1_data:/var/lib/zookeeper/data
-      - ./zookeeper-1_log:/var/lib/zookeeper/log
+      - ./bin/zookeeper-1_data:/var/lib/zookeeper/data
+      - ./bin/zookeeper-1_log:/var/lib/zookeeper/log
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -18,8 +18,8 @@ services:
     hostname: zookeeper-2
     container_name: zookeeper-2
     volumes:
-      - ./zookeeper-2_data:/var/lib/zookeeper/data
-      - ./zookeeper-2_log:/var/lib/zookeeper/log
+      - ./bin/zookeeper-2_data:/var/lib/zookeeper/data
+      - ./bin/zookeeper-2_log:/var/lib/zookeeper/log
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -31,8 +31,8 @@ services:
     hostname: zookeeper-3
     container_name: zookeeper-3
     volumes:
-      - ./zookeeper-3_data:/var/lib/zookeeper/data
-      - ./zookeeper-3_log:/var/lib/zookeeper/log
+      - ./bin/zookeeper-3_data:/var/lib/zookeeper/data
+      - ./bin/zookeeper-3_log:/var/lib/zookeeper/log
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -45,7 +45,7 @@ services:
     hostname: broker-1
     container_name: broker-1
     volumes:
-      - ./broker-1-data:/var/lib/kafka/data
+      - ./bin/broker-1-data:/var/lib/kafka/data
     depends_on:
       - zookeeper-1
       - zookeeper-2
@@ -60,13 +60,19 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: HOST:PLAINTEXT,INTERNAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
       KAFKA_SNAPSHOT_TRUST_EMPTY: true
+      TOPIC_NAME: email-topic
+    healthcheck:
+      test: [ "CMD-SHELL", "kafka-topics.sh --bootstrap-server broker-1:9092 --list" ]
+      interval: 5s
+      timeout: 10s
+      retries: 5
 
   broker-2:
     image: confluentinc/cp-kafka:7.8.0.arm64
     hostname: broker-2
     container_name: broker-2
     volumes:
-      - ./broker-2-data:/var/lib/kafka/data
+      - ./bin/broker-2-data:/var/lib/kafka/data
     depends_on:
       - zookeeper-1
       - zookeeper-2
@@ -88,7 +94,7 @@ services:
     hostname: broker-3
     container_name: broker-3
     volumes:
-      - ./broker-3-data:/var/lib/kafka/data
+      - ./bin/broker-3-data:/var/lib/kafka/data
     depends_on:
       - zookeeper-1
       - zookeeper-2
@@ -124,3 +130,19 @@ services:
       KAFKA_REST_HOST_NAME: rest-proxy
       KAFKA_REST_BOOTSTRAP_SERVERS: "broker-1:29092,broker-2:29093,broker-3:29094"
       KAFKA_REST_LISTENERS: "http://0.0.0.0:8082"
+
+  kafka-init:
+    image: confluentinc/cp-kafka:7.8.0.arm64
+    depends_on:
+      - rest-proxy
+    entrypoint: [ '/bin/sh', '-c' ]
+    command: |
+      "
+      # blocks until kafka is reachable
+      kafka-topics --bootstrap-server broker-1:29092 --list
+      echo -e 'Creating kafka topics'
+      kafka-topics --bootstrap-server broker-1:29092 --create --if-not-exists --topic email-topic --replication-factor 1 --partitions 3
+
+      echo -e 'Successfully created the following topics:'
+      kafka-topics --bootstrap-server broker-1:29092 --list
+      "

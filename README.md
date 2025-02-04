@@ -61,4 +61,16 @@ helm install prometheus prometheus-community/kube-prometheus-stack -n monitoring
 sum(rate(http_request_duration_ms_count[2m])) by (method, handler, http_status) * 60
 
 sum(rate(http_request_duration_ms_count[2m])) by (service, route, method, code) * 60
+
+
+# kafka
+helm install kafka oci://registry-1.docker.io/bitnamicharts/kafka -n ct-iot
+```
+
+## kafka
+cli
+```
+brew install confluentinc/tap/cli
+
+brew upgrade confluentinc/tap/cli
 ```

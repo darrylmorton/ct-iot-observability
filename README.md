@@ -24,39 +24,6 @@ helm repo add prometheus-community https://prometheus-community.github.io/helm-c
 helm install prometheus prometheus-community/kube-prometheus-stack -n monitoring -f helm/prometheus-additional.yaml
 ```
 
-
-## For kubectl apply manifests only (skip if using helm only, continue to grafana password)
-### GOPATH
-Ensure that GOPATH is configured on your environment
-
-### jsonnet-bundler
-go install github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb@latest
-
-jb init
-jb install github.com/prometheus-operator/kube-prometheus/jsonnet/kube-prometheus@main
-
-### wget
-brew install wget
-
-### kube-prometheus config
-wget https://raw.githubusercontent.com/prometheus-operator/kube-prometheus/main/example.jsonnet -O example.jsonnet
-wget https://raw.githubusercontent.com/prometheus-operator/kube-prometheus/main/build.sh -O build.sh
-chmod +x build.sh
-
-### gojsontoyaml
-go install github.com/brancz/gojsontoyaml@latest
-
-### build
-./build.sh example.jsonnet
-
-kubectl apply --server-side -f manifests/setup/
-kubectl apply -f manifests/
-
-kubectl delete -f manifests/
-kubectl delete -f manifests/setup/
-
-
-## helm continued...
 ### grafana password
 k get secret prometheus-grafana -n monitoring -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
 
@@ -67,6 +34,11 @@ echo "Browse to http://127.0.0.1:8080"
 echo "Browse to http://127.0.0.1:9090"
     k -n monitoring port-forward svc/prometheus-kube-prometheus-prometheus 9090:80 &
     
+### jq
+```
+brew install jq
+```
+
 ### list all port forwards across all services
 k get svc -o json | jq '.items[] | {name:.metadata.name, p:.spec.ports[] } | select( .p.nodePort != null ) | "\(.name): localhost:\(.p.nodePort) -> \(.p.port) -> \(.p.targetPort)"'
 

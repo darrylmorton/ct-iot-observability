@@ -13,6 +13,9 @@ local kp =
       common+: {
         namespace: 'monitoring',
       },
+      prometheus+: {
+        namespaces: ['monitoring', 'ct-iot'],
+      }
     },
   };
 

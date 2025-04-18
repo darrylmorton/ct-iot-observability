@@ -46,9 +46,9 @@ k get svc -o json | jq '.items[] | {name:.metadata.name, p:.spec.ports[] } | sel
 ### kafka | postgresql
 helm repo add bitnami https://charts.bitnami.com/bitnami
 ```
-helm upgrade --install prometheus prometheus-community/kube-prometheus-stack -n monitoring -f helm/prometheus-additional.yaml
-
 helm install prometheus prometheus-community/kube-prometheus-stack -n monitoring -f helm/prometheus-additional.yaml
+
+helm upgrade --install prometheus prometheus-community/kube-prometheus-stack -n monitoring -f helm/prometheus-additional.yaml
 
 sum(rate(http_request_duration_ms_count[2m])) by (method, handler, http_status) * 60
 

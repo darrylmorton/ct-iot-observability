@@ -1,0 +1,17 @@
+prometheus:
+  prometheusSpec:
+    scrapeInterval: 15s
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+  additionalServiceMonitors:
+    - name: ct-iot-servicemonitor
+      namespaceSelector:
+        matchNames:
+          - ct-iot
+      selector:
+        matchLabels:
+          app: ct-iot
+      endpoints:
+        - port: http
+          path: /metrics
+          interval: 15s
